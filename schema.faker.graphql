@@ -1,0 +1,16 @@
+type Employee {
+  id: ID!
+  firstName: String @fake(type: firstName)
+  lastName: String @fake(type: lastName)
+  userImageUrl: String @fake(type: avatarUrl)
+  coverImageUrl: String @fake(type: imageUrl, options: { randomizeImageUrl: true })
+  jobTitle: String @fake(type: jobTitle)
+  email: String @fake(type: email)
+  phoneNumber: String @fake(type: phoneNumber)
+  address: String @fake(type: streetAddress, options: { useFullAddress: true })
+}
+
+type Query {
+  allEmployees: [Employee!] @listLength(min: 6, max: 6)
+  employee(id: ID): Employee
+}

@@ -10,8 +10,7 @@
 /node_modules
 /dist
 
-# graphql files on the root dir
-/*.graphql
+
 
 # editor output
 src/editor/main.js
