@@ -24,7 +24,7 @@
     "test": "npm run lint && npm run check && npm run prettier:check && npm run check:spelling",
     "lint": "eslint --cache --max-warnings 0 .",
     "check": "tsc --noEmit",
-    "start": "node src/index.ts",
+    "start": "nodemon src/index.ts",
     "debug": "ts-node --inspect --compilerOptions '{\"inlineSources\":true}' src/index.ts",
     "start:editor": "webpack-dev-server --config webpack.config.js",
     "build:editor": "webpack -p --config webpack.config.js",
@@ -48,7 +48,6 @@
     "moment": "2.29.1",
     "node-fetch": "2.6.1",
     "open": "8.0.5",
-    "nodemon": "2.0.7",
     "yargs": "15.3.1"
   },
   "devDependencies": {
