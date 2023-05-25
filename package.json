@@ -24,7 +24,7 @@
     "test": "npm run lint && npm run check && npm run prettier:check && npm run check:spelling",
     "lint": "eslint --cache --max-warnings 0 .",
     "check": "tsc --noEmit",
-    "start": "nodemon src/index.ts",
+    "start": "node src/index.ts",
     "debug": "ts-node --inspect --compilerOptions '{\"inlineSources\":true}' src/index.ts",
     "start:editor": "webpack-dev-server --config webpack.config.js",
     "build:editor": "webpack -p --config webpack.config.js",
