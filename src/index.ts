@@ -21,7 +21,8 @@ import { ValidationErrors, buildWithFakeDefinitions } from './fake_definition';
 const log = console.log;
 
 parseCLI((options) => {
-  const { extendURL, headers, forwardHeaders } = options;
+  const { headers, forwardHeaders } = options;
+  let extendURL = null;
   const fileName =
     options.fileName ||
     (extendURL ? './schema_extension.faker.graphql' : './schema.faker.graphql');
@@ -37,57 +38,47 @@ parseCLI((options) => {
 
   let userSDL = existsSync(fileName) && readSDL(fileName);
 
-  userSDL = new Source(
-    fs.readFileSync(
-      path.join(__dirname, 'default-schema.graphql'),
-      'utf-8',
-    ),
-    fileName,
-  );
+  if (extendURL) {
+    // run in proxy mode
+    getRemoteSchema(extendURL, headers)
+      .then((schema) => {
+        const remoteSDL = new Source(
+          printSchema(schema),
+          `Introspection from "${extendURL}"`,
+        );
 
-  runServer(options, userSDL);
+        if (!userSDL) {
+          let body = fs.readFileSync(
+            path.join(__dirname, 'default-extend.graphql'),
+            'utf-8',
+          );
 
-//   if (extendURL) {
-//     // run in proxy mode
-//     getRemoteSchema(extendURL, headers)
-//       .then((schema) => {
-//         const remoteSDL = new Source(
-//           printSchema(schema),
-//           `Introspection from "${extendURL}"`,
-//         );
+          const rootTypeName = schema.getQueryType().name;
+          body = body.replace('___RootTypeName___', rootTypeName);
 
-//         if (!userSDL) {
-//           let body = fs.readFileSync(
-//             path.join(__dirname, 'default-extend.graphql'),
-//             'utf-8',
-//           );
+          userSDL = new Source(body, fileName);
+        }
 
-//           const rootTypeName = schema.getQueryType().name;
-//           body = body.replace('___RootTypeName___', rootTypeName);
-
-//           userSDL = new Source(body, fileName);
-//         }
-
-//         const executeFn = getProxyExecuteFn(extendURL, headers, forwardHeaders);
-//         runServer(options, userSDL, remoteSDL, executeFn);
-//       })
-//       .catch((error) => {
-//         log(chalk.red(error.stack));
-//         process.exit(1);
-//       });
-//   } else {
-//     if (!userSDL) {
-//       userSDL = new Source(
-//         fs.readFileSync(
-//           path.join(__dirname, 'default-schema.graphql'),
-//           'utf-8',
-//         ),
-//         fileName,
-//       );
-//     }
-//     runServer(options, userSDL);
-//   }
-// });
+        const executeFn = getProxyExecuteFn(extendURL, headers, forwardHeaders);
+        runServer(options, userSDL, remoteSDL, executeFn);
+      })
+      .catch((error) => {
+        log(chalk.red(error.stack));
+        process.exit(1);
+      });
+  } else {
+    if (!userSDL) {
+      userSDL = new Source(
+        fs.readFileSync(
+          path.join(__dirname, 'default-schema.graphql'),
+          'utf-8',
+        ),
+        fileName,
+      );
+    }
+    runServer(options, userSDL);
+  }
+});
 
 function runServer(
   options,
@@ -207,4 +198,4 @@ function prettyPrintValidationErrors(validationErrors: ValidationErrors) {
     let [message, ...otherLines] = error.toString().split('\n');
     log([chalk.yellow(message), ...otherLines].join('\n') + '\n\n');
   }
-}})
+}
